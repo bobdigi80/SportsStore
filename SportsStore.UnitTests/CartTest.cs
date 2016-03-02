@@ -246,11 +246,53 @@ namespace SportsStore.UnitTests
         public void Cannot_Checkout_Empty_Cart()
         {
             //Arrange - create a mock order processor
-            Mock<IOrderProcesssor> mock = new Mock 
+            var mock = new Mock<IOrderProcessor>();
             //Arrange - create an empty cart
             Cart cart = new Cart();
+            //Arrange - create shipping details
+            var shippingdetails = new ShippingDetails();
+            //Arrange - create an instance of the controller
+            var target = new CartController(null, mock.Object);
 
+            //Act
+            ViewResult result = target.Checkout(cart, shippingdetails);
+            
+            //Assert - check that the order hasn't been passed on to the processor
+            mock.Verify(m => m.ProcessOrder(It.IsAny<Cart>(), It.IsAny<ShippingDetails>()), Times.Never());
+            
+            //Assert - check that the method is returning the default view 
+            Assert.AreEqual("", result.ViewName);
+            //Assert - check that I am passing an invalid model to the view
+            Assert.AreEqual(false, result.ViewData.ModelState.IsValid);
         }
+
+        [TestMethod]
+        public void Cannot_Checkout_Invalid_ShippingDetails()
+        {
+            //Arrange - create a mock order processor
+            Mock<IOrderProcessor> mock = new Mock<IOrderProcessor>();
+
+            //Arrange - create a cart with an item
+            var cart = new Cart();
+            cart.AddItem(new Product(), 1);
+
+            //Arrange - add an error to the model
+            var target = new CartController(null, mock.Object);
+            //Arrange - add an error to the model
+            target.ModelState.AddModelError("error", "error");
+
+            //Act - try to checkout
+            var result = target.Checkout(cart, new ShippingDetails());
+
+            //Assert - check that the order hasn't been passed on to the processor
+            mock.Verify(m => m.ProcessOrder(It.IsAny<Cart>(), It.IsAny<ShippingDetails>()), Times.Never());
+            //Assert - check that the method is returning the default view
+            Assert.AreEqual("", result.ViewName);
+            // Assert - check that I am passing an invalid model to the view
+            Assert.AreEqual(false, result.ViewData.ModelState.IsValid);
+        }
+
+
 
     }
 }
