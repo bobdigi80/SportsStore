@@ -1,6 +1,6 @@
 # SportsStore
-# My Sports store apps from Adam Freeman's book
-# Im up to chapter 9
+# My Sports store app from Adam Freeman's excellent Pro ASP.Net MVC5 book
+# I'm up to chapter 9
 #
 #
 #
