@@ -304,7 +304,7 @@ namespace SportsStore.UnitTests
         [TestMethod]
         public void Can_Checkout_And_submit_Order()
         {
-            //Arrange - create a nock order processor
+            //Arrange - create a mock order processor
             var mock = new Mock<IOrderProcessor>();
             var cart = new Cart();
             cart.AddItem(new Product(), 1);
