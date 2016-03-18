@@ -3,6 +3,8 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Runtime.Remoting.Messaging;
+using System.Web.Mvc;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using SportsStore.Domain.Abstract;
@@ -17,7 +19,7 @@ namespace SportsStore.UnitTests
         [TestMethod]
         public void Index_Contains_all_Products()
         {
-            //AArange - vreate the mock repository
+            //Arange - vreate the mock repository
             var mock = new Mock<IProductRepository>();
             mock.Setup(m => m.Products).Returns(new Product[]
             {
@@ -75,8 +77,12 @@ namespace SportsStore.UnitTests
             var target = new AdminController(mock.Object);
 
             var p1 = target.Edit(1).ViewData.Model as Product;
-            var p2 = target.Edit(1).ViewData.Model as Product;
-            var p3 = target.Edit(1).ViewData.Model as Product;
+            var p2 = target.Edit(2).ViewData.Model as Product;
+            var p3 = target.Edit(3).ViewData.Model as Product;
+
+            if (p1 != null) Assert.AreEqual(1, p1.ProductID);
+            if (p2 != null) Assert.AreEqual(2, p2.ProductID);
+            if (p3 != null) Assert.AreEqual(3, p3.ProductID);
         }
 
         [TestMethod]
@@ -111,6 +117,76 @@ namespace SportsStore.UnitTests
             
             //Assert
             Assert.IsNull(result);
+        }
+
+        [TestMethod]
+        public void Can_Save_Valid_Changes()
+        {
+            //Arrange - create mock repository
+            var mock = new Mock<IProductRepository>();
+            //Arrange - create the controller
+            var target = new AdminController(mock.Object);
+            //Arrange - create a product
+            var product = new Product {Name = "Test"};
+
+            //Act - try to save product
+            var result = target.Edit(product);
+
+            //Assert
+            mock.Verify(m => m.SaveProduct(product));
+
+            //Assert
+            Assert.IsInstanceOfType(result, typeof(ViewResult));
+        }
+
+        [TestMethod]
+        public void Cannot_Save_Invalid_Changes()
+        {
+            // Arrange - create repository
+            var mock = new Mock<IProductRepository>();
+            // Arrange - create the controller
+            var target = new AdminController(mock.Object);
+            //Arrange - create a product
+            var product = new Product {Name = "Test"};
+            //Arrange - add an error to the model state 
+            target.ModelState.AddModelError("error", "error");
+
+            //Act - try to save product
+            var result = target.Edit(product);
+
+            //Assert - check that the repository was not called
+            mock.Verify(m => m.SaveProduct(It.IsAny<Product>()), Times.Never());
+            //Assert - check the method result type
+            Assert.IsInstanceOfType(result, typeof(ViewResult));
+        }
+
+        [TestMethod]
+        public void Can_Delete_Valid_Products()
+        {
+            //Arrange - create a Product
+            var prod = new Product
+            {
+                ProductID = 2,
+                Name = "Test"
+            };
+
+            //Arrange - create the mock repository
+            var mock = new Mock<IProductRepository>();
+            mock.Setup(m => m.Products).Returns(new Product[]
+            {
+                new Product {ProductID = 1, Name = "P1"},
+                prod,
+                new Product {ProductID = 3, Name = "P3"}
+            });
+
+            //Arrange - create the controller
+            var target = new AdminController(mock.Object);
+
+            target.Delete(prod.ProductID);
+
+            //Assert - ensure that the repository delete method was called with the correct Product
+            mock.Verify(m => m.DeleteProduct(prod.ProductID));
+
         }
     }
 }

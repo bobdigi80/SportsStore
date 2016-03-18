@@ -12,7 +12,14 @@
     </head>
     <body>
         <div>
+            @if (TempData["message"] != null)
+            {
+                <div class="alert alert-success">@TempData["message"]</div>
+            }
+
             @RenderBody()
         </div>
     </body>
+    @Scripts.Render("~/bundles/jquery")
+    @Scripts.Render("~/bundles/jqueryval")
 </html>
